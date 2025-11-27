@@ -1,0 +1,153 @@
+CSCE566 Final Project Reflection
+Student: Prashant Basnet
+Date: November 27, 2024
+
+================================================================================
+1. What's your biggest challenge in the project? How did you address the challenge?
+================================================================================
+
+The biggest challenge was the Transformer model's complete failure to learn, achieving only random-level performance (AUC ≈ 0.50) while the other three models converged successfully. Initially, I expected the Transformer to be the best performer given its state-of-the-art status in NLP, so this failure was both surprising and frustrating.
+
+Technical investigation revealed several likely causes:
+- Dataset size (10,000 samples) may be insufficient for the attention mechanism to learn meaningful patterns, as Transformers typically require larger corpora
+- The positional encoding and multi-head attention architecture added significant complexity (~4.1M parameters) that may have needed more careful initialization
+- Limited hyperparameter tuning due to computational constraints meant I couldn't extensively search for optimal learning rates, attention head configurations, or warmup schedules
+
+How I addressed it:
+- I debugged systematically by checking training loss curves, verifying the model compiled correctly, and ensuring data was properly formatted
+- I researched Transformer training best practices and discovered that medical NLP often uses pre-trained models (BioBERT, ClinicalBERT) rather than training from scratch
+- I experimented with different learning rates and dropout values, but within the project timeline couldn't achieve convergence
+- Ultimately, I documented this as a finding rather than hiding it - it became a valuable lesson about the gap between "state-of-the-art" architectures and practical deployment on limited data
+
+This experience taught me that simpler models (CNN, GRU, LSTM) can outperform complex ones when data is limited, and that model selection should consider dataset characteristics, not just architectural sophistication.
+
+================================================================================
+2. What did you learn from the final project? (What could have been done better?)
+================================================================================
+
+Technical learnings:
+1. **Sequence modeling architectures**: Gained hands-on experience implementing and comparing LSTM, GRU, CNN, and Transformer models. Understanding the tradeoffs between them - GRU's efficiency vs LSTM's expressiveness, CNN's speed vs RNN's sequential processing - was invaluable.
+
+2. **Medical NLP challenges**: Clinical notes contain domain-specific terminology, abbreviations, and negation patterns that generic preprocessing misses. This is fundamentally different from general text classification.
+
+3. **Fairness in healthcare AI**: Computing race-specific metrics revealed significant performance disparities (CNN's AUC gap: 0.0759). This highlighted that optimizing for overall accuracy can mask inequitable performance across demographic groups - critical for healthcare applications.
+
+4. **TensorFlow/Keras proficiency**: Improved skills in model building, callbacks (EarlyStopping, ReduceLROnPlateau), and custom metrics. Learning to debug training failures and interpret loss curves was particularly valuable.
+
+5. **Experimental methodology**: Learned importance of fair comparisons (identical hyperparameters, same data splits), reproducibility (setting random seeds), and comprehensive evaluation beyond single metrics.
+
+What could have been done better:
+
+1. **Pre-trained models**: Should have used BioBERT or ClinicalBERT instead of training embeddings from scratch. These models are pre-trained on millions of medical documents and would likely outperform my custom architectures.
+
+2. **Hyperparameter optimization**: Used only manual tuning with limited exploration. Grid search or Bayesian optimization (Optuna, Ray Tune) would have found better configurations, especially for the failed Transformer.
+
+3. **Advanced preprocessing**: My basic cleaning (lowercase, special char removal) missed medical-specific processing:
+   - Medical entity recognition (diseases, medications, procedures)
+   - Negation detection ("no signs of glaucoma" vs "glaucoma present")
+   - Abbreviation expansion (IOP → intraocular pressure)
+
+4. **Threshold optimization**: Used default 0.5 threshold for Sensitivity/Specificity calculation. Should have found optimal threshold via Youden's index or maximize F1-score to better balance false positives/negatives.
+
+5. **Ensemble methods**: Could have combined CNN (best AUC) + LSTM (best fairness) predictions via voting or stacking to get both high performance and equity.
+
+6. **Fairness mitigation**: Only evaluated fairness, didn't mitigate it. Could have implemented:
+   - Adversarial debiasing (training to be invariant to demographic features)
+   - Group reweighting (upweight minority samples during training)
+   - Post-processing threshold adjustment per demographic group
+
+7. **Interpretability analysis**: No attention visualization or LIME explanations. Understanding which clinical terms drive predictions is critical for physician trust and debugging.
+
+8. **Cross-validation**: Used single train/val/test split. K-fold CV would provide more robust performance estimates and confidence intervals, especially for small demographic subgroups.
+
+================================================================================
+3. What's your self-evaluation for code and report? A, B, C, or D? Why?
+================================================================================
+
+Self-Evaluation Grade: B+
+
+Justification:
+
+CODE QUALITY: B+
+Strengths:
+- Clean modular structure: separate preprocessing.py, models_implementation.py, evaluation.py, train.py files promote reusability
+- All 4 required models implemented correctly (3 converged successfully)
+- Proper use of TensorFlow/Keras best practices (callbacks, validation splits, GPU utilization)
+- Reproducible: requirements.txt provided, random seeds set
+- Colab notebook included for easy replication without local setup
+
+Weaknesses:
+- Transformer implementation has unresolved convergence issues
+- Limited error handling (doesn't gracefully handle missing data files)
+- No unit tests for preprocessing or model functions
+- Could benefit from configuration files (YAML/JSON) instead of hardcoded hyperparameters
+- Missing docstrings on some functions
+
+REPORT QUALITY: A-
+Strengths:
+- Comprehensive coverage of all required sections (intro, related work, method, experiments, conclusions, references)
+- Clear problem motivation and clinical context
+- Detailed architectural descriptions with parameter counts
+- Strong fairness analysis with race-specific metrics and AUC gap calculations
+- Honest discussion of Transformer failure and limitations
+- Extensive future work section showing deep thinking
+- Professional formatting and readability
+
+Weaknesses:
+- Initially missed Sensitivity/Specificity calculations (addressed after feedback)
+- First draft exceeded 4-page limit (condensed version created)
+- Could have included more figures/visualizations (ROC curves, confusion matrices, training history plots)
+- References could be more extensive (8 citations, could add more domain-specific medical NLP papers)
+
+TECHNICAL DEPTH: B+
+Strengths:
+- Successfully implemented diverse architectures (RNN-based, CNN-based, attention-based)
+- Proper evaluation methodology with multiple metrics (AUC, Sensitivity, Specificity)
+- Fairness-aware evaluation across demographic subgroups - went beyond minimum requirements
+- Good experimental design (separate val/test sets, early stopping, LR scheduling)
+- Insightful analysis of fairness-performance tradeoffs
+
+Weaknesses:
+- Transformer failure reduces technical contribution (only 3 of 4 models successful)
+- No hyperparameter optimization beyond manual tuning
+- No ensemble methods or advanced techniques (data augmentation, transfer learning)
+- Limited baseline comparisons (could have included simpler ML like logistic regression, random forest)
+
+AREAS OF STRENGTH:
+- Fairness analysis: Race-specific metrics with AUC gap calculations demonstrate awareness of healthcare AI ethics
+- Clear documentation: Well-written report and code comments make project easy to understand and reproduce
+- Honest self-assessment: Acknowledged Transformer failure and other limitations rather than hiding them
+- Practical focus: CNN achieved clinically relevant 0.87 AUC, showing real-world potential
+
+AREAS FOR IMPROVEMENT:
+- Transformer debugging: Should have invested more time troubleshooting or sought help earlier
+- Advanced techniques: Missing transfer learning (BioBERT), ensemble methods, fairness mitigation
+- Visualization: Report would benefit from more figures (training curves, ROC plots, confusion matrices)
+- Medical domain knowledge: Preprocessing could leverage clinical NLP tools and medical ontologies
+
+OVERALL:
+I give myself a B+ because:
+- I successfully completed the core requirements: 4 models implemented (though 1 failed), comprehensive evaluation, fairness analysis, well-documented code and report
+- The project demonstrates solid understanding of deep learning fundamentals and practical ML engineering
+- I went beyond minimum requirements with detailed fairness analysis and extensive future work discussion
+- However, the Transformer failure, limited hyperparameter exploration, and lack of advanced techniques prevent an A grade
+- With more time and computational resources, implementing pre-trained models and ensemble methods would elevate this to A-level work
+
+The project successfully achieved its primary goal - comparing architectures for clinical glaucoma detection with fairness evaluation - but there's clear room for technical depth and sophistication that would move it from "solid" to "excellent."
+
+================================================================================
+Additional Comments
+================================================================================
+
+Time investment: Approximately 30-35 hours total
+- 8 hours: dataset exploration, preprocessing pipeline development
+- 10 hours: model implementation and training (including Transformer debugging attempts)
+- 8 hours: evaluation, fairness analysis, result interpretation
+- 6 hours: report writing and documentation
+- 3 hours: Colab notebook preparation and testing
+
+Most interesting aspect: The fairness analysis revealed unexpected patterns. I initially expected the majority group (White, 76.9% of data) to have best performance due to more training examples, but CNN actually performed best on Asian patients (0.9309 AUC) despite them being only 7.9% of the dataset. This counterintuitive finding suggests potential confounding factors (age, disease severity) that warrant further investigation and highlights why fairness evaluation is essential.
+
+Connection to broader interests: This project solidified my interest in healthcare AI and the critical importance of bias evaluation. Medical AI has enormous potential to improve patient outcomes, but poorly validated models can perpetuate or worsen health disparities. The experience of balancing predictive performance with demographic equity taught me that technical excellence alone is insufficient - ethical considerations must be central to AI development.
+
+Suggestion for future iterations: It would be valuable to provide access to pre-trained medical language models (BioBERT, ClinicalBERT) and example code for fine-tuning them. Many students likely encounter the same Transformer training challenges I did, and demonstrating transfer learning would be more educationally valuable than training from scratch with limited data. Additionally, providing a smaller "debug dataset" (e.g., 1000 samples) would allow faster iteration during development before scaling to the full dataset for final evaluation.
